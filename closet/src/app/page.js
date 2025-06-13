@@ -1,40 +1,37 @@
 //src/app/page
 
 'use client';
-import { useState } from 'react';
-import LandingPage from '@/components/LandingPage';
-import Dashboard from '@/components/Dashboard';
-import AuthModal from '@/components/AuthModal';
+import { useState, useEffect } from 'react';
+import LandingPage from '../components/LandingPage';
+import Dashboard from '../components/Dashboard';
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleLogin = (userData) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    setShowAuth(false);
-  };
+  useEffect(() => {
+    // Check if user is logged in (mock check)
+    const savedUser = localStorage.getItem('closetUser');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
+  }, []);
 
-  const handleLogout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {isAuthenticated ? (
-        <Dashboard user={user} onLogout={handleLogout} />
+    <div className="min-h-screen bg-gray-50">
+      {user ? (
+        <Dashboard user={user} setUser={setUser} />
       ) : (
-        <LandingPage onShowAuth={() => setShowAuth(true)} />
-      )}
-      
-      {showAuth && (
-        <AuthModal 
-          onLogin={handleLogin} 
-          onClose={() => setShowAuth(false)} 
-        />
+        <LandingPage setUser={setUser} />
       )}
     </div>
   );

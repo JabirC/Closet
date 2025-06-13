@@ -2,75 +2,49 @@
 'use client';
 import { useState } from 'react';
 import Sidebar from './Sidebar';
-import VirtualCloset from './VirtualCloset';
+import ClothingDrawer from './ClothingDrawer';
 import OutfitPlanner from './OutfitPlanner';
 import Calendar from './Calendar';
-import UploadModal from './UploadModal';
+import ImageUpload from './UploadModal';
 
-export default function Dashboard({ user, onLogout }) {
+export default function Dashboard({ user, setUser }) {
   const [activeTab, setActiveTab] = useState('closet');
-  const [showUpload, setShowUpload] = useState(false);
-  const [clothingItems, setClothingItems] = useState([]);
-  const [outfits, setOutfits] = useState([]);
 
-  const addClothingItem = (item) => {
-    setClothingItems([...clothingItems, { ...item, id: Date.now() }]);
+  const updateUser = (updatedUser) => {
+    localStorage.setItem('closetUser', JSON.stringify(updatedUser));
+    setUser(updatedUser);
   };
 
-  const createOutfit = (outfitData) => {
-    setOutfits([...outfits, { ...outfitData, id: Date.now() }]);
+  const handleLogout = () => {
+    localStorage.removeItem('closetUser');
+    setUser(null);
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
-        onLogout={onLogout}
         user={user}
+        onLogout={handleLogout}
       />
       
-      <main className="flex-1 overflow-hidden">
-        <div className="h-full p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-light text-gray-800">
-              {activeTab === 'closet' && 'My Closet'}
-              {activeTab === 'outfits' && 'Outfit Planner'}
-              {activeTab === 'calendar' && 'Style Calendar'}
-            </h1>
-            
-            {activeTab === 'closet' && (
-              <button
-                onClick={() => setShowUpload(true)}
-                className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-              >
-                Add Items
-              </button>
-            )}
-          </div>
-          
+      <div className="flex-1 p-8">
+        <div className="max-w-7xl mx-auto">
           {activeTab === 'closet' && (
-            <VirtualCloset items={clothingItems} />
+            <ClothingDrawer user={user} updateUser={updateUser} />
           )}
           {activeTab === 'outfits' && (
-            <OutfitPlanner 
-              items={clothingItems} 
-              outfits={outfits}
-              onCreateOutfit={createOutfit}
-            />
+            <OutfitPlanner user={user} updateUser={updateUser} />
           )}
           {activeTab === 'calendar' && (
-            <Calendar outfits={outfits} />
+            <Calendar user={user} updateUser={updateUser} />
+          )}
+          {activeTab === 'upload' && (
+            <ImageUpload user={user} updateUser={updateUser} />
           )}
         </div>
-      </main>
-      
-      {showUpload && (
-        <UploadModal 
-          onClose={() => setShowUpload(false)}
-          onAddItem={addClothingItem}
-        />
-      )}
+      </div>
     </div>
   );
 }
