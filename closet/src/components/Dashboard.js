@@ -1,11 +1,11 @@
 //src/components/Dashboard.js
+
 'use client';
 import { useState } from 'react';
 import Sidebar from './Sidebar';
 import ClothingDrawer from './ClothingDrawer';
 import OutfitPlanner from './OutfitPlanner';
 import Calendar from './Calendar';
-import ImageUpload from './UploadModal';
 
 export default function Dashboard({ user, setUser }) {
   const [activeTab, setActiveTab] = useState('closet');
@@ -21,7 +21,10 @@ export default function Dashboard({ user, setUser }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div 
+      className="flex min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-amber-100"
+      style={{ fontFamily: 'Montserrat, sans-serif' }}
+    >
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
@@ -39,9 +42,6 @@ export default function Dashboard({ user, setUser }) {
           )}
           {activeTab === 'calendar' && (
             <Calendar user={user} updateUser={updateUser} />
-          )}
-          {activeTab === 'upload' && (
-            <ImageUpload user={user} updateUser={updateUser} />
           )}
         </div>
       </div>
