@@ -19,7 +19,7 @@ export default function LandingPage({ setUser }) {
   const [authMode, setAuthMode] = useState('login');
   const [typewriterText, setTypewriterText] = useState('');
   const [typewriterComplete, setTypewriterComplete] = useState(false);
-  const [showGlare, setShowGlare] = useState(false);
+  const [glarePosition, setGlarePosition] = useState(-100);
 
   const fullText = "Reimagined";
   const staticText = "Your Wardrobe, ";
@@ -36,8 +36,15 @@ export default function LandingPage({ setUser }) {
           setTypewriterComplete(true);
           // Start periodic glare effect
           const glareInterval = setInterval(() => {
-            setShowGlare(true);
-            setTimeout(() => setShowGlare(false), 1500);
+            let position = -100;
+            const glareTimer = setInterval(() => {
+              position += 5;
+              setGlarePosition(position);
+              if (position > 100) {
+                clearInterval(glareTimer);
+                setGlarePosition(-100);
+              }
+            }, 50);
           }, 4000);
           return () => clearInterval(glareInterval);
         }, 500);
@@ -70,6 +77,39 @@ export default function LandingPage({ setUser }) {
     }
   ];
 
+  const pricingPlans = [
+    {
+      name: 'Free',
+      price: '$0',
+      period: 'forever',
+      description: 'Perfect for getting started',
+      features: [
+        '10 clothing uploads',
+        'Basic outfit planning',
+        'AI categorization',
+        'Mobile app access'
+      ],
+      buttonText: 'Get Started',
+      popular: false
+    },
+    {
+      name: 'Premium',
+      price: '$10',
+      period: 'per month',
+      description: 'For serious fashion enthusiasts',
+      features: [
+        '100 clothing uploads',
+        'Advanced outfit recommendations',
+        'Weather-based suggestions',
+        'Calendar integration',
+        'Premium AI features',
+        'Priority support'
+      ],
+      buttonText: 'Upgrade Now',
+      popular: true
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Subtle grid background */}
@@ -83,6 +123,7 @@ export default function LandingPage({ setUser }) {
           </div>
           <div className="hidden md:flex space-x-8">
             <a href="#features" className="text-gray-700 hover:text-black transition-colors font-medium">Features</a>
+            <a href="#pricing" className="text-gray-700 hover:text-black transition-colors font-medium">Pricing</a>
             <a href="#demo" className="text-gray-700 hover:text-black transition-colors font-medium">Demo</a>
           </div>
           <button
@@ -108,13 +149,22 @@ export default function LandingPage({ setUser }) {
               <div className="space-y-4">
                 <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
                   <span className="text-black">{staticText}</span>
-                  <span className={`relative inline-block ${
-                    typewriterComplete 
-                      ? `text-black ${showGlare ? 'rainbow-typewriter' : ''}` 
-                      : 'rainbow-typewriter'
-                  }`}>
-                    {typewriterText}
-                    {!typewriterComplete && <span className="animate-blink text-blue-500">|</span>}
+                  <span className="relative inline-block text-black">
+                    <span className="relative z-10">
+                      {typewriterComplete ? fullText : typewriterText}
+                      {!typewriterComplete && <span className="animate-blink text-blue-500">|</span>}
+                    </span>
+                    {typewriterComplete && (
+                      <div 
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-60 pointer-events-none"
+                        style={{
+                          transform: `translateX(${glarePosition}%)`,
+                          width: '30%',
+                          filter: 'blur(1px)',
+                          transition: glarePosition === -100 ? 'none' : 'transform 0.05s linear'
+                        }}
+                      />
+                    )}
                   </span>
                 </h1>
                 <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
@@ -190,8 +240,71 @@ export default function LandingPage({ setUser }) {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl font-bold text-black mb-6">
+              Simple, Transparent Pricing
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Choose the perfect plan for your style journey
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {pricingPlans.map((plan, index) => (
+              <div
+                key={index}
+                className={`relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 ${
+                  plan.popular ? 'ring-2 ring-black scale-105' : ''
+                }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-full text-sm font-medium">
+                    Most Popular
+                  </div>
+                )}
+                
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-black mb-2">{plan.name}</h3>
+                  <p className="text-gray-600 mb-4">{plan.description}</p>
+                  <div className="mb-4">
+                    <span className="text-4xl font-bold text-black">{plan.price}</span>
+                    <span className="text-gray-600 ml-2">{plan.period}</span>
+                  </div>
+                </div>
+
+                <ul className="space-y-4 mb-8">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-center space-x-3">
+                      <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                      <span className="text-gray-700">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => {
+                    setAuthMode('register');
+                    setShowAuth(true);
+                  }}
+                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
+                    plan.popular
+                      ? 'bg-black text-white hover:bg-gray-800'
+                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  {plan.buttonText}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-20 px-8">
+      <section className="py-20 px-8 bg-gray-50">
         <div className="max-w-4xl mx-auto text-center">
           <div className="bg-black rounded-3xl p-12 text-white">
             <h2 className="text-4xl font-bold mb-6">Ready to Get Started?</h2>
