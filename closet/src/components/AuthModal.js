@@ -3,7 +3,7 @@
 'use client';
 import { useState } from 'react';
 
-export default function AuthModal({ mode, setUser, onClose }) {
+export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -32,14 +32,14 @@ export default function AuthModal({ mode, setUser, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-gradient-to-br from-amber-50 to-rose-50 rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20 animate-slide-up">
+      <div className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20 animate-slide-up">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-light text-gray-800" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <h2 className="text-3xl font-bold text-slate-800" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             {mode === 'login' ? 'Welcome Back' : 'Join Closet'}
           </h2>
           <button 
             onClick={onClose} 
-            className="text-gray-500 hover:text-gray-700 text-2xl hover:scale-110 transition-all duration-200"
+            className="text-slate-500 hover:text-slate-700 text-2xl hover:scale-110 transition-all duration-200 cursor-pointer"
           >
             ×
           </button>
@@ -53,7 +53,7 @@ export default function AuthModal({ mode, setUser, onClose }) {
                 placeholder="Full Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-900 text-gray-800 placeholder-gray-500 transition-all duration-300"
+                className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-500 transition-all duration-300"
                 required
               />
             </div>
@@ -64,7 +64,7 @@ export default function AuthModal({ mode, setUser, onClose }) {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-900 text-gray-800 placeholder-gray-500 transition-all duration-300"
+              className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-500 transition-all duration-300"
               required
             />
           </div>
@@ -74,14 +74,14 @@ export default function AuthModal({ mode, setUser, onClose }) {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-900 text-gray-800 placeholder-gray-500 transition-all duration-300"
+              className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-500 transition-all duration-300"
               required
             />
           </div>
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-purple-900 text-white py-4 rounded-2xl hover:bg-purple-800 transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 font-semibold text-lg shadow-lg"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-2xl hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 font-semibold text-lg cursor-pointer"
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
@@ -96,8 +96,8 @@ export default function AuthModal({ mode, setUser, onClose }) {
         
         <div className="text-center mt-6">
           <button
-            onClick={() => window.location.reload()}
-            className="text-purple-900 hover:text-purple-700 transition-colors text-sm"
+            onClick={onToggleMode}
+            className="text-blue-600 hover:text-blue-700 transition-colors text-sm font-medium cursor-pointer"
           >
             {mode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>

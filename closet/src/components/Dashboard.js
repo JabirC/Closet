@@ -22,8 +22,8 @@ export default function Dashboard({ user, setUser }) {
 
   return (
     <div 
-      className="flex min-h-screen bg-gradient-to-br from-amber-50 via-rose-50 to-amber-100"
-      style={{ fontFamily: 'Montserrat, sans-serif' }}
+      className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30"
+      style={{ fontFamily: 'Space Grotesk, Inter, sans-serif' }}
     >
       <Sidebar 
         activeTab={activeTab} 
