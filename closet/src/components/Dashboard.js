@@ -21,10 +21,7 @@ export default function Dashboard({ user, setUser }) {
   };
 
   return (
-    <div 
-      className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30"
-      style={{ fontFamily: 'Space Grotesk, Inter, sans-serif' }}
-    >
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
@@ -32,8 +29,8 @@ export default function Dashboard({ user, setUser }) {
         onLogout={handleLogout}
       />
       
-      <div className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="flex-1">
+        <div className="p-8">
           {activeTab === 'closet' && (
             <ClothingDrawer user={user} updateUser={updateUser} />
           )}
