@@ -39,6 +39,22 @@
   50% { transform: translateY(-10px); }
 }
 
+@keyframes rainbow-typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes rainbow-gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glare-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 .animate-fade-in { animation: fade-in 0.6s ease-out; }
 .animate-slide-up { animation: slide-up 0.8s ease-out; }
 .animate-slide-up-delay { animation: slide-up 0.8s ease-out 0.2s both; }
@@ -47,6 +63,31 @@
 .animate-blink { animation: blink 1s infinite; }
 .animate-glow { animation: glow 2s ease-in-out infinite; }
 .animate-float-gentle { animation: float-gentle 3s ease-in-out infinite; }
+
+/* Rainbow typewriter effect */
+.rainbow-typewriter {
+  background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3, #54a0ff);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-gradient 2s linear infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.rainbow-typewriter::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  backdrop-filter: blur(1px);
+  animation: glare-sweep 3s infinite;
+  animation-delay: 2s;
+}
 
 /* Smooth scrolling */
 html { scroll-behavior: smooth; }
@@ -68,15 +109,13 @@ html { scroll-behavior: smooth; }
   background-size: 20px 20px;
 }
 
-/* Typewriter effect */
-.typewriter {
-  overflow: hidden;
-  border-right: 2px solid;
-  white-space: nowrap;
-  animation: typewriter 3s steps(30) forwards, blink 1s infinite;
+/* Drag and drop styles */
+.drag-over {
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 2px dashed #3b82f6;
 }
 
-.typewriter.finished {
-  border-right: none;
-  animation: none;
+.dragging {
+  opacity: 0.5;
+  transform: rotate(5deg);
 }

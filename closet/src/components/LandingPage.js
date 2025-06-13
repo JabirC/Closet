@@ -19,15 +19,10 @@ export default function LandingPage({ setUser }) {
   const [authMode, setAuthMode] = useState('login');
   const [typewriterText, setTypewriterText] = useState('');
   const [typewriterComplete, setTypewriterComplete] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [showGlare, setShowGlare] = useState(false);
 
-  const fullText = "Your Wardrobe, Reimagined";
-
-  useEffect(() => {
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const fullText = "Reimagined";
+  const staticText = "Your Wardrobe, ";
 
   useEffect(() => {
     let index = 0;
@@ -37,9 +32,17 @@ export default function LandingPage({ setUser }) {
         index++;
       } else {
         clearInterval(timer);
-        setTimeout(() => setTypewriterComplete(true), 500);
+        setTimeout(() => {
+          setTypewriterComplete(true);
+          // Start periodic glare effect
+          const glareInterval = setInterval(() => {
+            setShowGlare(true);
+            setTimeout(() => setShowGlare(false), 1500);
+          }, 4000);
+          return () => clearInterval(glareInterval);
+        }, 500);
       }
-    }, 100);
+    }, 150);
 
     return () => clearInterval(timer);
   }, []);
@@ -75,7 +78,7 @@ export default function LandingPage({ setUser }) {
       {/* Navigation */}
       <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 backdrop-blur-xl rounded-2xl px-8 py-4 shadow-lg border border-gray-200">
         <div className="flex items-center space-x-12">
-          <div className="text-2xl font-bold text-black tracking-tight" style={{ fontFamily: 'SF Pro Display, -apple-system, sans-serif' }}>
+          <div className="text-2xl font-bold text-black tracking-tight">
             closet
           </div>
           <div className="hidden md:flex space-x-8">
@@ -104,9 +107,14 @@ export default function LandingPage({ setUser }) {
               
               <div className="space-y-4">
                 <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
-                  <span className={`${typewriterComplete ? 'text-black' : 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent'}`}>
+                  <span className="text-black">{staticText}</span>
+                  <span className={`relative inline-block ${
+                    typewriterComplete 
+                      ? `text-black ${showGlare ? 'rainbow-typewriter' : ''}` 
+                      : 'rainbow-typewriter'
+                  }`}>
                     {typewriterText}
-                    {!typewriterComplete && <span className="animate-blink">|</span>}
+                    {!typewriterComplete && <span className="animate-blink text-blue-500">|</span>}
                   </span>
                 </h1>
                 <p className="text-xl text-gray-600 max-w-lg leading-relaxed">

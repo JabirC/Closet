@@ -31,15 +31,15 @@ export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-xl rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-white/20 animate-slide-up">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+      <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-gray-100 animate-slide-up">
         <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold text-slate-800" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <h2 className="text-3xl font-bold text-black">
             {mode === 'login' ? 'Welcome Back' : 'Join Closet'}
           </h2>
           <button 
             onClick={onClose} 
-            className="text-slate-500 hover:text-slate-700 text-2xl hover:scale-110 transition-all duration-200 cursor-pointer"
+            className="text-gray-400 hover:text-gray-600 text-2xl hover:scale-110 transition-all duration-200"
           >
             ×
           </button>
@@ -53,7 +53,7 @@ export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
                 placeholder="Full Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-500 transition-all duration-300"
+                className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-black placeholder-gray-500 transition-all duration-300"
                 required
               />
             </div>
@@ -64,7 +64,7 @@ export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-500 transition-all duration-300"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-black placeholder-gray-500 transition-all duration-300"
               required
             />
           </div>
@@ -74,14 +74,14 @@ export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-6 py-4 bg-white/80 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-500 transition-all duration-300"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-black placeholder-gray-500 transition-all duration-300"
               required
             />
           </div>
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-2xl hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 font-semibold text-lg cursor-pointer"
+            className="w-full bg-black text-white py-4 rounded-2xl hover:bg-gray-800 transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:scale-100 font-semibold text-lg"
           >
             {isLoading ? (
               <div className="flex items-center justify-center">
@@ -97,7 +97,7 @@ export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
         <div className="text-center mt-6">
           <button
             onClick={onToggleMode}
-            className="text-blue-600 hover:text-blue-700 transition-colors text-sm font-medium cursor-pointer"
+            className="text-black hover:text-gray-700 transition-colors text-sm font-medium"
           >
             {mode === 'login' ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
           </button>
