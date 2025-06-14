@@ -1,340 +1,180 @@
-//src/components/LandingPage.js
-
+// src/components/LandingPage.js
 'use client';
 import { useState, useEffect } from 'react';
-import AuthModal from './AuthModal';
-import { 
-  Sparkles, 
-  Zap, 
-  Scan, 
-  Calendar, 
-  Smartphone, 
-  ArrowRight,
-  Play,
-  Check
-} from 'lucide-react';
+import { signIn } from 'next-auth/react';
 
 export default function LandingPage() {
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
-  const [typewriterText, setTypewriterText] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [showCursor, setShowCursor] = useState(true);
+  const [isWaiting, setIsWaiting] = useState(false);
 
-  const words = ["Reimagined", "Revolutionized", "Transformed"];
-  const staticText = "Your Wardrobe, ";
+  const words = ['Reimagined', 'Organized', 'Simplified', 'Digitized', 'Personalized'];
 
   useEffect(() => {
-    const currentWord = words[currentWordIndex];
-    let timeout;
+    if (isWaiting) return;
 
-    if (!isDeleting) {
-      // Typing
-      if (typewriterText.length < currentWord.length) {
-        timeout = setTimeout(() => {
-          setTypewriterText(currentWord.slice(0, typewriterText.length + 1));
-        }, 100);
-      } else {
-        // Pause before deleting
-        timeout = setTimeout(() => {
+    const typeSpeed = isDeleting ? 75 : 120;
+    const currentWord = words[currentWordIndex];
+
+    const timer = setTimeout(() => {
+      if (!isDeleting && currentText === currentWord) {
+        setIsWaiting(true);
+        setTimeout(() => {
           setIsDeleting(true);
-        }, 2000);
-      }
-    } else {
-      // Deleting
-      if (typewriterText.length > 0) {
-        timeout = setTimeout(() => {
-          setTypewriterText(currentWord.slice(0, typewriterText.length - 1));
-        }, 50);
-      } else {
-        // Move to next word
+          setIsWaiting(false);
+        }, 2500); // Wait 2.5 seconds before deleting
+      } else if (isDeleting && currentText === '') {
         setIsDeleting(false);
         setCurrentWordIndex((prev) => (prev + 1) % words.length);
+      } else {
+        setCurrentText(prev => 
+          isDeleting 
+            ? prev.slice(0, -1)
+            : currentWord.slice(0, prev.length + 1)
+        );
       }
-    }
+    }, typeSpeed);
 
-    return () => clearTimeout(timeout);
-  }, [typewriterText, currentWordIndex, isDeleting, words]);
+    return () => clearTimeout(timer);
+  }, [currentText, isDeleting, currentWordIndex, words, isWaiting]);
 
-  // Cursor blinking effect
   useEffect(() => {
-    const cursorInterval = setInterval(() => {
+    const cursorTimer = setInterval(() => {
       setShowCursor(prev => !prev);
-    }, 500);
-
-    return () => clearInterval(cursorInterval);
+    }, 530);
+    return () => clearInterval(cursorTimer);
   }, []);
 
-  const features = [
-    {
-      icon: <Scan className="w-8 h-8" />,
-      title: 'AI Recognition',
-      description: 'Instantly identify and categorize your clothing with advanced AI technology'
-    },
-    {
-      icon: <Sparkles className="w-8 h-8" />,
-      title: 'Smart Styling',
-      description: 'Get personalized outfit recommendations based on weather, occasion, and style'
-    },
-    {
-      icon: <Smartphone className="w-8 h-8" />,
-      title: 'Digital Closet',
-      description: 'Access your entire wardrobe from anywhere with cloud synchronization'
-    },
-    {
-      icon: <Calendar className="w-8 h-8" />,
-      title: 'Outfit Planning',
-      description: 'Schedule outfits in advance and never worry about what to wear'
-    }
-  ];
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const email = formData.get('email');
+    const password = formData.get('password');
 
-  const pricingPlans = [
-    {
-      name: 'Free',
-      price: '$0',
-      period: 'forever',
-      description: 'Perfect for getting started',
-      features: [
-        '10 clothing uploads',
-        'Basic outfit planning',
-        'AI categorization',
-        'Mobile app access'
-      ],
-      buttonText: 'Get Started',
-      popular: false
-    },
-    {
-      name: 'Premium',
-      price: '$10',
-      period: 'per month',
-      description: 'For serious fashion enthusiasts',
-      features: [
-        '100 clothing uploads',
-        'Advanced outfit recommendations',
-        'Weather-based suggestions',
-        'Calendar integration',
-        'Premium AI features',
-        'Priority support'
-      ],
-      buttonText: 'Upgrade Now',
-      popular: true
+    if (isLogin) {
+      await signIn('credentials', { email, password, callbackUrl: '/' });
+    } else {
+      const name = formData.get('name');
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      if (response.ok) {
+        await signIn('credentials', { email, password, callbackUrl: '/' });
+      }
     }
-  ];
+  };
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Subtle grid background */}
-      <div className="fixed inset-0 grid-bg opacity-50"></div>
-      
-      {/* Navigation */}
-      <nav className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/80 backdrop-blur-xl rounded-2xl px-8 py-4 shadow-lg border border-gray-200">
-        <div className="flex items-center space-x-12">
-          <div className="text-2xl font-bold text-black tracking-tight">
-            closet
-          </div>
-          <div className="hidden md:flex space-x-8">
-            <a href="#features" className="text-gray-700 hover:text-black transition-colors font-medium">Features</a>
-            <a href="#pricing" className="text-gray-700 hover:text-black transition-colors font-medium">Pricing</a>
-          </div>
-          <button
-            onClick={() => setShowAuth(true)}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-all duration-300 font-medium"
-          >
-            Sign In
-          </button>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Left side - Content */}
-            <div className="space-y-8">
-              <div className="inline-flex items-center space-x-2 bg-gray-100 rounded-full px-4 py-2 text-sm font-medium text-gray-700">
-                <Zap className="w-4 h-4 text-blue-500" />
-                <span>Powered by Advanced AI</span>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 grid-bg overflow-hidden">
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left Side - Hero Content */}
+          <div className="text-center lg:text-left animate-slide-up">
+            <div className="mb-8">
+              <h1 className="text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+                Your Closet,
+                <br />
+                <span className="flowing-gradient-text inline-block">
+                  {currentText}
+                  <span className={`inline-block w-1 h-16 bg-black ml-1 ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-100`}></span>
+                </span>
+              </h1>
               
-              <div className="space-y-4">
-                <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
-                  <span className="text-black">{staticText}</span>
-                  <span className="relative inline-block">
-                    <span className="futuristic-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
-                      {typewriterText}
-                    </span>
-                    <span className={`text-blue-500 ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-100`}>|</span>
-                    {/* Futuristic glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 blur-lg animate-pulse"></div>
-                  </span>
-                </h1>
-                <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
-                  Transform your closet into an intelligent wardrobe with AI-powered organization and effortless style planning.
+              <p className="text-xl text-gray-300 mb-8 max-w-lg mx-auto lg:mx-0 animate-slide-up-delay">
+                Transform your wardrobe management with AI-powered organization, 
+                smart outfit planning, and digital styling assistance.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-slide-up-delay-2">
+                <button className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative z-10">Get Started Free</span>
+                  <div className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                </button>
+                
+                <button className="group px-8 py-4 border-2 border-white/30 text-white font-semibold rounded-xl backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:border-white/50 hover:scale-105 cursor-pointer">
+                  <span className="group-hover:text-blue-300 transition-colors duration-300">Learn More</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Auth Form */}
+          <div className="animate-slide-up-delay">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 shadow-2xl">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {isLogin ? 'Welcome Back' : 'Create Account'}
+                </h2>
+                <p className="text-gray-300">
+                  {isLogin ? 'Sign in to your digital closet' : 'Start organizing your wardrobe'}
                 </p>
               </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => {
-                    setAuthMode('register');
-                    setShowAuth(true);
-                  }}
-                  className="group px-8 py-4 bg-black text-white rounded-lg hover:bg-gray-800 transition-all duration-300 font-semibold flex items-center space-x-2"
-                >
-                  <span>Start Free Trial</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="px-8 py-4 border-2 border-gray-200 text-gray-700 rounded-lg hover:border-gray-300 transition-all duration-300 font-semibold flex items-center space-x-2">
-                  <Play className="w-5 h-5" />
-                  <span>Watch Demo</span>
-                </button>
-              </div>
-            </div>
 
-            {/* Right side - Visual */}
-            <div className="relative">
-              <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 shadow-2xl animate-float-gentle">
-                <div className="grid grid-cols-3 gap-4">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
-                    <div
-                      key={item}
-                      className="aspect-square bg-white rounded-xl shadow-sm flex items-center justify-center text-2xl animate-glow"
-                      style={{ animationDelay: `${item * 0.2}s` }}
-                    >
-                      {item % 3 === 0 ? '👔' : item % 2 === 0 ? '👗' : '👟'}
-                    </div>
-                  ))}
-                </div>
-                <div className="absolute -top-4 -right-4 bg-blue-500 text-white rounded-full p-3 animate-pulse">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-black mb-6">
-              Everything You Need
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Powerful AI features designed to revolutionize your style management
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
-              >
-                <div className="text-blue-500 mb-6">{feature.icon}</div>
-                <h3 className="text-xl font-bold text-black mb-4">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-5xl font-bold text-black mb-6">
-              Simple, Transparent Pricing
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Choose the perfect plan for your style journey
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {pricingPlans.map((plan, index) => (
-              <div
-                key={index}
-                className={`relative bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 ${
-                  plan.popular ? 'ring-2 ring-black scale-105 border-2 border-black' : 'border border-gray-200'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-2 rounded-full text-sm font-medium">
-                    Most Popular
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {!isLogin && (
+                  <div className="group">
+                    <input
+                      name="name"
+                      type="text"
+                      placeholder="Full Name"
+                      required
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
+                    />
                   </div>
                 )}
                 
-                <div className="p-8">
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold text-black mb-2">{plan.name}</h3>
-                    <p className="text-gray-600 mb-6">{plan.description}</p>
-                    <div className="mb-6">
-                      <span className="text-5xl font-bold text-black">{plan.price}</span>
-                      <span className="text-gray-600 ml-2 text-lg">/{plan.period}</span>
-                    </div>
-                  </div>
-
-                  <ul className="space-y-4 mb-8">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-center space-x-3">
-                        <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span className="text-gray-700 text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    onClick={() => {
-                      setAuthMode('register');
-                      setShowAuth(true);
-                    }}
-                    className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 text-lg ${
-                      plan.popular
-                        ? 'bg-black text-white hover:bg-gray-800 hover:scale-105'
-                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:scale-105'
-                    }`}
-                  >
-                    {plan.buttonText}
-                  </button>
+                <div className="group">
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="Email Address"
+                    required
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
+                  />
                 </div>
-              </div>
-            ))}
+                
+                <div className="group">
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="Password"
+                    required
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 group-hover:bg-white/15"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="group w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 relative overflow-hidden cursor-pointer"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative z-10">
+                    {isLogin ? 'Sign In' : 'Create Account'}
+                  </span>
+                </button>
+              </form>
+
+              <p className="text-center text-gray-300 mt-6">
+                {isLogin ? "Don't have an account?" : "Already have an account?"}
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="ml-2 text-blue-400 hover:text-blue-300 font-semibold transition-colors duration-300 hover:underline cursor-pointer"
+                >
+                  {isLogin ? 'Sign Up' : 'Sign In'}
+                </button>
+              </p>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-8 bg-gray-50">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="bg-black rounded-3xl p-12 text-white">
-            <h2 className="text-4xl font-bold mb-6">Ready to Get Started?</h2>
-            <p className="text-xl mb-8 text-gray-300">
-              Join thousands who've already transformed their style
-            </p>
-            <button
-              onClick={() => {
-                setAuthMode('register');
-                setShowAuth(true);
-              }}
-              className="px-8 py-4 bg-white text-black rounded-lg hover:bg-gray-100 transition-all duration-300 font-bold"
-            >
-              Start Your Free Trial
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {showAuth && (
-        <AuthModal
-          mode={authMode}
-          onClose={() => setShowAuth(false)}
-          onToggleMode={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-        />
-      )}
+      </div>
     </div>
   );
 }

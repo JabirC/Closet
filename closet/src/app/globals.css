@@ -26,7 +26,7 @@
 
 @keyframes blink {
   0%, 50% { border-color: transparent; }
-  51%, 100% { border-color: #3b82f6; }
+  51%, 100% { border-color: #000000; }
 }
 
 @keyframes glow {
@@ -37,17 +37,6 @@
 @keyframes float-gentle {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
-}
-
-@keyframes rainbow-typewriter {
-  from { width: 0; }
-  to { width: 100%; }
-}
-
-@keyframes rainbow-gradient {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
 }
 
 @keyframes glare-sweep {
@@ -64,29 +53,33 @@
 .animate-glow { animation: glow 2s ease-in-out infinite; }
 .animate-float-gentle { animation: float-gentle 3s ease-in-out infinite; }
 
-/* Rainbow typewriter effect */
-.rainbow-typewriter {
-  background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #feca57, #ff9ff3, #54a0ff);
+/* Flowing gradient text - left to right */
+.flowing-gradient-text {
+  background: linear-gradient(
+    90deg,
+    #ff6b6b 0%,
+    #4ecdc4 14%,
+    #45b7d1 28%,
+    #96ceb4 42%,
+    #feca57 56%,
+    #ff9ff3 70%,
+    #54a0ff 84%,
+    #ff6b6b 100%
+  );
   background-size: 200% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: rainbow-gradient 2s linear infinite;
-  position: relative;
-  overflow: hidden;
+  animation: flowing-gradient 4s linear infinite;
 }
 
-.rainbow-typewriter::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-  backdrop-filter: blur(1px);
-  animation: glare-sweep 3s infinite;
-  animation-delay: 2s;
+@keyframes flowing-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
 
 /* Smooth scrolling */
@@ -120,62 +113,11 @@ html { scroll-behavior: smooth; }
   transform: rotate(5deg);
 }
 
-/* Add these new animations and effects */
-@keyframes gradient-x {
-  0%, 100% {
-    background-size: 200% 200%;
-    background-position: left center;
-  }
-  50% {
-    background-size: 200% 200%;
-    background-position: right center;
-  }
+/* Button hover cursor */
+button {
+  cursor: pointer;
 }
 
-@keyframes neon-glow {
-  0%, 100% {
-    text-shadow: 
-      0 0 5px rgba(59, 130, 246, 0.5),
-      0 0 10px rgba(59, 130, 246, 0.5),
-      0 0 15px rgba(59, 130, 246, 0.5),
-      0 0 20px rgba(59, 130, 246, 0.5);
-  }
-  50% {
-    text-shadow: 
-      0 0 10px rgba(147, 51, 234, 0.8),
-      0 0 20px rgba(147, 51, 234, 0.8),
-      0 0 30px rgba(147, 51, 234, 0.8),
-      0 0 40px rgba(147, 51, 234, 0.8);
-  }
-}
-
-.animate-gradient-x {
-  animation: gradient-x 3s ease infinite;
-}
-
-.animate-neon-glow {
-  animation: neon-glow 2s ease-in-out infinite alternate;
-}
-
-.futuristic-text {
-  position: relative;
-  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6);
-  background-size: 400% 400%;
-  animation: gradient-x 3s ease infinite;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.futuristic-text::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
-  filter: blur(10px);
-  z-index: -1;
-  animation: gradient-x 3s ease infinite;
+button:disabled {
+  cursor: not-allowed;
 }

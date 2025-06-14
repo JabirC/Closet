@@ -67,12 +67,12 @@ export default function Calendar({ user, updateUser }) {
   };
 
   return (
-    <div className="h-screen flex">
+    <div className="flex h-[calc(100vh-2rem)]">
       {/* Calendar */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 flex flex-col">
         <h1 className="text-2xl font-light mb-6">Outfit Calendar</h1>
         
-        <div className="bg-white rounded-lg shadow-sm p-4 h-full">
+        <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col flex-1">
           <h2 className="text-lg font-medium mb-4 text-center">
             {monthNames[currentMonth]} {currentYear}
           </h2>
@@ -85,7 +85,7 @@ export default function Calendar({ user, updateUser }) {
             ))}
           </div>
           
-          <div className="grid grid-cols-7 gap-1 flex-1">
+          <div className="grid grid-cols-7 gap-1 flex-1 content-start">
             {emptyDays.map((_, index) => (
               <div key={`empty-${index}`} className="aspect-square"></div>
             ))}
@@ -110,19 +110,19 @@ export default function Calendar({ user, updateUser }) {
                   <div className="text-xs font-medium mb-1">{day}</div>
                   {plannedOutfit && (
                     <div className="relative group">
-                      <div className="flex -space-x-1">
-                        {plannedOutfit.items.slice(0, 2).map(item => (
+                      <div className="grid grid-cols-2 gap-0.5">
+                        {plannedOutfit.items.slice(0, 4).map((item, index) => (
                           <img
                             key={item.id}
-                            src={item.image}
+                            src={item.imageUrl || item.image}
                             alt=""
-                            className="w-3 h-3 rounded-full border border-white object-cover"
+                            className="w-full h-3 rounded-sm object-cover"
                           />
                         ))}
                       </div>
                       <button
                         onClick={() => removeOutfitFromDate(dateStr)}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3 h-3 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3 h-3 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                         style={{ fontSize: '8px' }}
                       >
                         ×
@@ -146,14 +146,14 @@ export default function Calendar({ user, updateUser }) {
               key={outfit.id}
               draggable
               onDragStart={(e) => handleDragStart(e, outfit)}
-              className="bg-white rounded-lg p-3 shadow-sm cursor-move hover:shadow-md transition-all duration-200 hover:scale-105"
+              className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-move"
             >
               <h3 className="font-medium text-sm mb-2 truncate">{outfit.name}</h3>
               <div className="grid grid-cols-4 gap-1">
                 {outfit.items.slice(0, 4).map(item => (
                   <img
                     key={item.id}
-                    src={item.image}
+                    src={item.imageUrl || item.image}
                     alt={item.name}
                     className="w-full aspect-square object-cover rounded"
                   />
