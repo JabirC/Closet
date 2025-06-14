@@ -2,12 +2,15 @@
 
 'use client';
 import { useState } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, AlertCircle } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 export default function ClothingDrawer({ user, updateUser }) {
+  const { data: session } = useSession();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showUpload, setShowUpload] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
   
   const categories = ['all', 'tops', 'bottoms', 'shoes', 'accessories', 'outerwear'];
   
@@ -20,36 +23,50 @@ export default function ClothingDrawer({ user, updateUser }) {
     if (!files.length) return;
 
     setUploading(true);
+    setError('');
     
-    for (const file of files) {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const imageUrl = event.target.result;
-        
-        // Mock AI processing delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const newClothingItem = {
-          id: Date.now() + Math.random(),
-          image: imageUrl,
-          name: file.name.split('.')[0] || 'New Item',
-          category: mockAIClassification(),
-          tags: mockAITags(),
-          dateAdded: new Date().toISOString()
+    try {
+      for (const file of files) {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const imageUrl = event.target.result;
+          
+          // Create clothing item
+          const response = await fetch('/api/clothes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: file.name.split('.')[0] || 'New Item',
+              category: mockAIClassification(),
+              tags: mockAITags(),
+              imageUrl: imageUrl
+            })
+          });
+
+          if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Upload failed');
+          }
+
+          const { clothingItem } = await response.json();
+          
+          // Update local state
+          const updatedUser = {
+            ...user,
+            clothes: [...user.clothes, clothingItem],
+            uploadCount: (user.uploadCount || 0) + 1
+          };
+          
+          updateUser(updatedUser);
         };
-        
-        const updatedUser = {
-          ...user,
-          clothes: [...user.clothes, newClothingItem]
-        };
-        
-        updateUser(updatedUser);
-      };
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setUploading(false);
+      setShowUpload(false);
     }
-    
-    setUploading(false);
-    setShowUpload(false);
   };
 
   const mockAIClassification = () => {
@@ -62,26 +79,58 @@ export default function ClothingDrawer({ user, updateUser }) {
     return allTags.slice(0, Math.floor(Math.random() * 3) + 1);
   };
 
-  const deleteItem = (itemId) => {
-    const updatedUser = {
-      ...user,
-      clothes: user.clothes.filter(item => item.id !== itemId)
-    };
-    updateUser(updatedUser);
+  const deleteItem = async (itemId) => {
+    try {
+      const response = await fetch(`/api/clothes/${itemId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete item');
+      }
+
+      const updatedUser = {
+        ...user,
+        clothes: user.clothes.filter(item => item.id !== itemId)
+      };
+      updateUser(updatedUser);
+    } catch (error) {
+      setError('Failed to delete item');
+    }
   };
+
+  const uploadLimit = user.tier === 'free' ? 10 : 100;
+  const canUpload = (user.uploadCount || 0) < uploadLimit;
 
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-light">Your Closet</h1>
+        <div>
+          <h1 className="text-3xl font-light">Your Closet</h1>
+          <p className="text-gray-600 mt-2">
+            {user.uploadCount || 0} of {uploadLimit} items uploaded
+          </p>
+        </div>
         <button
           onClick={() => setShowUpload(true)}
-          className="flex items-center space-x-2 bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          disabled={!canUpload}
+          className={`flex items-center space-x-2 px-6 py-2 rounded-lg transition-colors ${
+            canUpload 
+              ? 'bg-black text-white hover:bg-gray-800' 
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
         >
           <Upload className="w-4 h-4" />
           <span>Upload Photos</span>
         </button>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+          <AlertCircle className="w-5 h-5 text-red-600" />
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
       
       <div className="mb-6">
         <div className="flex space-x-2">
@@ -106,13 +155,13 @@ export default function ClothingDrawer({ user, updateUser }) {
           <div key={item.id} className="bg-white rounded-lg shadow-sm overflow-hidden group">
             <div className="aspect-square relative">
               <img
-                src={item.image}
+                src={item.imageUrl || item.image}
                 alt={item.name}
                 className="w-full h-full object-cover"
               />
               <button
                 onClick={() => deleteItem(item.id)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
               >
                 ×
               </button>
@@ -150,6 +199,14 @@ export default function ClothingDrawer({ user, updateUser }) {
               </button>
             </div>
             
+            {!canUpload && (
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-yellow-800 text-sm">
+                  You've reached your upload limit. Upgrade to Premium for more uploads.
+                </p>
+              </div>
+            )}
+            
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
               <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 mb-4">
@@ -163,12 +220,12 @@ export default function ClothingDrawer({ user, updateUser }) {
                 onChange={handleFileUpload}
                 className="hidden"
                 id="file-upload"
-                disabled={uploading}
+                disabled={uploading || !canUpload}
               />
               <label
                 htmlFor="file-upload"
                 className={`inline-block px-6 py-3 rounded-lg cursor-pointer transition-colors ${
-                  uploading 
+                  uploading || !canUpload
                     ? 'bg-gray-400 text-white cursor-not-allowed' 
                     : 'bg-black text-white hover:bg-gray-800'
                 }`}

@@ -14,44 +14,56 @@ import {
   Check
 } from 'lucide-react';
 
-export default function LandingPage({ setUser }) {
+export default function LandingPage() {
   const [showAuth, setShowAuth] = useState(false);
   const [authMode, setAuthMode] = useState('login');
   const [typewriterText, setTypewriterText] = useState('');
-  const [typewriterComplete, setTypewriterComplete] = useState(false);
-  const [glarePosition, setGlarePosition] = useState(-100);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
 
-  const fullText = "Reimagined";
+  const words = ["Reimagined", "Revolutionized", "Transformed"];
   const staticText = "Your Wardrobe, ";
 
   useEffect(() => {
-    let index = 0;
-    const timer = setInterval(() => {
-      if (index < fullText.length) {
-        setTypewriterText(fullText.slice(0, index + 1));
-        index++;
-      } else {
-        clearInterval(timer);
-        setTimeout(() => {
-          setTypewriterComplete(true);
-          // Start periodic glare effect
-          const glareInterval = setInterval(() => {
-            let position = -100;
-            const glareTimer = setInterval(() => {
-              position += 5;
-              setGlarePosition(position);
-              if (position > 100) {
-                clearInterval(glareTimer);
-                setGlarePosition(-100);
-              }
-            }, 50);
-          }, 4000);
-          return () => clearInterval(glareInterval);
-        }, 500);
-      }
-    }, 150);
+    const currentWord = words[currentWordIndex];
+    let timeout;
 
-    return () => clearInterval(timer);
+    if (!isDeleting) {
+      // Typing
+      if (typewriterText.length < currentWord.length) {
+        timeout = setTimeout(() => {
+          setTypewriterText(currentWord.slice(0, typewriterText.length + 1));
+        }, 100);
+      } else {
+        // Pause before deleting
+        timeout = setTimeout(() => {
+          setIsDeleting(true);
+        }, 2000);
+      }
+    } else {
+      // Deleting
+      if (typewriterText.length > 0) {
+        timeout = setTimeout(() => {
+          setTypewriterText(currentWord.slice(0, typewriterText.length - 1));
+        }, 50);
+      } else {
+        // Move to next word
+        setIsDeleting(false);
+        setCurrentWordIndex((prev) => (prev + 1) % words.length);
+      }
+    }
+
+    return () => clearTimeout(timeout);
+  }, [typewriterText, currentWordIndex, isDeleting, words]);
+
+  // Cursor blinking effect
+  useEffect(() => {
+    const cursorInterval = setInterval(() => {
+      setShowCursor(prev => !prev);
+    }, 500);
+
+    return () => clearInterval(cursorInterval);
   }, []);
 
   const features = [
@@ -124,7 +136,6 @@ export default function LandingPage({ setUser }) {
           <div className="hidden md:flex space-x-8">
             <a href="#features" className="text-gray-700 hover:text-black transition-colors font-medium">Features</a>
             <a href="#pricing" className="text-gray-700 hover:text-black transition-colors font-medium">Pricing</a>
-            <a href="#demo" className="text-gray-700 hover:text-black transition-colors font-medium">Demo</a>
           </div>
           <button
             onClick={() => setShowAuth(true)}
@@ -149,22 +160,13 @@ export default function LandingPage({ setUser }) {
               <div className="space-y-4">
                 <h1 className="text-6xl lg:text-7xl font-bold leading-tight">
                   <span className="text-black">{staticText}</span>
-                  <span className="relative inline-block text-black">
-                    <span className="relative z-10">
-                      {typewriterComplete ? fullText : typewriterText}
-                      {!typewriterComplete && <span className="animate-blink text-blue-500">|</span>}
+                  <span className="relative inline-block">
+                    <span className="futuristic-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
+                      {typewriterText}
                     </span>
-                    {typewriterComplete && (
-                      <div 
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-60 pointer-events-none"
-                        style={{
-                          transform: `translateX(${glarePosition}%)`,
-                          width: '30%',
-                          filter: 'blur(1px)',
-                          transition: glarePosition === -100 ? 'none' : 'transform 0.05s linear'
-                        }}
-                      />
-                    )}
+                    <span className={`text-blue-500 ${showCursor ? 'opacity-100' : 'opacity-0'} transition-opacity duration-100`}>|</span>
+                    {/* Futuristic glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-purple-400/20 to-pink-400/20 blur-lg animate-pulse"></div>
                   </span>
                 </h1>
                 <p className="text-xl text-gray-600 max-w-lg leading-relaxed">
@@ -256,47 +258,49 @@ export default function LandingPage({ setUser }) {
             {pricingPlans.map((plan, index) => (
               <div
                 key={index}
-                className={`relative bg-white rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 ${
-                  plan.popular ? 'ring-2 ring-black scale-105' : ''
+                className={`relative bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 ${
+                  plan.popular ? 'ring-2 ring-black scale-105 border-2 border-black' : 'border border-gray-200'
                 }`}
               >
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-2 rounded-full text-sm font-medium">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-6 py-2 rounded-full text-sm font-medium">
                     Most Popular
                   </div>
                 )}
                 
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-black mb-2">{plan.name}</h3>
-                  <p className="text-gray-600 mb-4">{plan.description}</p>
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold text-black">{plan.price}</span>
-                    <span className="text-gray-600 ml-2">{plan.period}</span>
+                <div className="p-8">
+                  <div className="text-center mb-8">
+                    <h3 className="text-2xl font-bold text-black mb-2">{plan.name}</h3>
+                    <p className="text-gray-600 mb-6">{plan.description}</p>
+                    <div className="mb-6">
+                      <span className="text-5xl font-bold text-black">{plan.price}</span>
+                      <span className="text-gray-600 ml-2 text-lg">/{plan.period}</span>
+                    </div>
                   </div>
+
+                  <ul className="space-y-4 mb-8">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center space-x-3">
+                        <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-700 text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    onClick={() => {
+                      setAuthMode('register');
+                      setShowAuth(true);
+                    }}
+                    className={`w-full py-4 rounded-xl font-semibold transition-all duration-300 text-lg ${
+                      plan.popular
+                        ? 'bg-black text-white hover:bg-gray-800 hover:scale-105'
+                        : 'bg-gray-100 text-gray-900 hover:bg-gray-200 hover:scale-105'
+                    }`}
+                  >
+                    {plan.buttonText}
+                  </button>
                 </div>
-
-                <ul className="space-y-4 mb-8">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center space-x-3">
-                      <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => {
-                    setAuthMode('register');
-                    setShowAuth(true);
-                  }}
-                  className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    plan.popular
-                      ? 'bg-black text-white hover:bg-gray-800'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                  }`}
-                >
-                  {plan.buttonText}
-                </button>
               </div>
             ))}
           </div>
@@ -327,7 +331,6 @@ export default function LandingPage({ setUser }) {
       {showAuth && (
         <AuthModal
           mode={authMode}
-          setUser={setUser}
           onClose={() => setShowAuth(false)}
           onToggleMode={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
         />

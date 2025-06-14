@@ -1,4 +1,6 @@
-import { NextAuthOptions } from 'next-auth'
+//src/lib/auth.js
+
+import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { db } from './db'
@@ -62,3 +64,5 @@ export const authOptions = {
     }
   }
 }
+
+export default NextAuth(authOptions)

@@ -1,23 +1,55 @@
 //src/components/Dashboard.js
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { signOut } from 'next-auth/react';
 import Sidebar from './Sidebar';
 import ClothingDrawer from './ClothingDrawer';
 import OutfitPlanner from './OutfitPlanner';
 import Calendar from './Calendar';
 
-export default function Dashboard({ user, setUser }) {
+export default function Dashboard({ user }) {
   const [activeTab, setActiveTab] = useState('closet');
+  const [userData, setUserData] = useState({
+    ...user,
+    clothes: [],
+    outfits: [],
+    calendar: {}
+  });
 
-  const updateUser = (updatedUser) => {
-    localStorage.setItem('closetUser', JSON.stringify(updatedUser));
-    setUser(updatedUser);
+  // Fetch user data on mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const [clothesRes, outfitsRes] = await Promise.all([
+        fetch('/api/clothes'),
+        fetch('/api/outfits')
+      ]);
+
+      if (clothesRes.ok && outfitsRes.ok) {
+        const clothesData = await clothesRes.json();
+        const outfitsData = await outfitsRes.json();
+
+        setUserData(prev => ({
+          ...prev,
+          clothes: clothesData.clothes || [],
+          outfits: outfitsData.outfits || []
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  const updateUserData = (updatedData) => {
+    setUserData(updatedData);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('closetUser');
-    setUser(null);
+    signOut({ callbackUrl: '/' });
   };
 
   return (
@@ -25,20 +57,20 @@ export default function Dashboard({ user, setUser }) {
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
-        user={user}
+        user={userData}
         onLogout={handleLogout}
       />
       
       <div className="flex-1">
         <div className="p-8">
           {activeTab === 'closet' && (
-            <ClothingDrawer user={user} updateUser={updateUser} />
+            <ClothingDrawer user={userData} updateUser={updateUserData} />
           )}
           {activeTab === 'outfits' && (
-            <OutfitPlanner user={user} updateUser={updateUser} />
+            <OutfitPlanner user={userData} updateUser={updateUserData} />
           )}
           {activeTab === 'calendar' && (
-            <Calendar user={user} updateUser={updateUser} />
+            <Calendar user={userData} updateUser={updateUserData} />
           )}
         </div>
       </div>

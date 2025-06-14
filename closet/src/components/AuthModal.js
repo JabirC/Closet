@@ -2,36 +2,70 @@
 
 'use client';
 import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+import { Eye, EyeOff } from 'lucide-react';
 
-export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
+export default function AuthModal({ mode, onClose, onToggleMode }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const user = {
-      id: Date.now(),
-      email,
-      name: mode === 'register' ? name : email.split('@')[0],
-      clothes: [],
-      outfits: [],
-      calendar: {}
-    };
-    
-    localStorage.setItem('closetUser', JSON.stringify(user));
-    setUser(user);
-    onClose();
+    try {
+      if (mode === 'register') {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || 'Registration failed');
+        }
+
+        // Auto sign in after registration
+        const result = await signIn('credentials', {
+          email,
+          password,
+          redirect: false
+        });
+
+        if (result?.error) {
+          throw new Error('Login after registration failed');
+        }
+
+        onClose();
+      } else {
+        const result = await signIn('credentials', {
+          email,
+          password,
+          redirect: false
+        });
+
+        if (result?.error) {
+          throw new Error('Invalid credentials');
+        }
+
+        onClose();
+      }
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
       <div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-gray-100 animate-slide-up">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold text-black">
@@ -44,6 +78,12 @@ export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
             ×
           </button>
         </div>
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm">{error}</p>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {mode === 'register' && (
@@ -70,13 +110,20 @@ export default function AuthModal({ mode, setUser, onClose, onToggleMode }) {
           </div>
           <div className="relative">
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-black placeholder-gray-500 transition-all duration-300"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-black placeholder-gray-500 transition-all duration-300 pr-12"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
           </div>
           <button
             type="submit"
