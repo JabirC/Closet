@@ -1,11 +1,12 @@
-//src/components/Calendar.js
-
+// src/components/Calendar.js
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Calendar({ user, updateUser }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [draggedOutfit, setDraggedOutfit] = useState(null);
+  const [calendar, setCalendar] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const today = new Date();
   const currentMonth = today.getMonth();
@@ -22,13 +23,31 @@ export default function Calendar({ user, updateUser }) {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
+  useEffect(() => {
+    fetchCalendar();
+  }, []);
+
+  const fetchCalendar = async () => {
+    try {
+      const response = await fetch('/api/calendar');
+      if (response.ok) {
+        const data = await response.json();
+        setCalendar(data.calendar || {});
+      }
+    } catch (error) {
+      console.error('Error fetching calendar:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDate = (day) => {
     return `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   };
 
   const getOutfitForDate = (date) => {
-    const outfitId = user.calendar[date];
-    return user.outfits.find(outfit => outfit.id.toString() === outfitId);
+    const entry = calendar[date];
+    return entry?.outfit;
   };
 
   const handleDragStart = (e, outfit) => {
@@ -41,137 +60,172 @@ export default function Calendar({ user, updateUser }) {
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e, date) => {
+  const handleDrop = async (e, date) => {
     e.preventDefault();
     if (!draggedOutfit) return;
     
-    const updatedUser = {
-      ...user,
-      calendar: {
-        ...user.calendar,
-        [date]: draggedOutfit.id.toString()
+    try {
+      const response = await fetch('/api/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: date,
+          outfitId: draggedOutfit.id
+        })
+      });
+
+      if (response.ok) {
+        const { calendarEntry } = await response.json();
+        setCalendar(prev => ({
+          ...prev,
+          [date]: {
+            outfitId: calendarEntry.outfitId,
+            outfit: calendarEntry.outfit
+          }
+        }));
       }
-    };
+    } catch (error) {
+      console.error('Error updating calendar:', error);
+    }
     
-    updateUser(updatedUser);
     setDraggedOutfit(null);
   };
 
-  const removeOutfitFromDate = (date) => {
-    const { [date]: removed, ...restCalendar } = user.calendar;
-    const updatedUser = {
-      ...user,
-      calendar: restCalendar
-    };
-    updateUser(updatedUser);
+  const removeOutfitFromDate = async (date) => {
+    try {
+      const response = await fetch(`/api/calendar?date=${date}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        const { [date]: removed, ...restCalendar } = calendar;
+        setCalendar(restCalendar);
+      }
+    } catch (error) {
+      console.error('Error removing outfit from calendar:', error);
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-[calc(100vh-2rem)]">
-      {/* Calendar */}
-      <div className="flex-1 p-6 flex flex-col">
-        <h1 className="text-2xl font-light mb-6">Outfit Calendar</h1>
-        
-        <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col flex-1">
-          <h2 className="text-lg font-medium mb-4 text-center">
-            {monthNames[currentMonth]} {currentYear}
-          </h2>
-          
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center font-medium text-gray-600 py-2 text-sm">
-                {day}
-              </div>
-            ))}
-          </div>
-          
-          <div className="grid grid-cols-7 gap-1 flex-1 content-start">
-            {emptyDays.map((_, index) => (
-              <div key={`empty-${index}`} className="aspect-square"></div>
-            ))}
-            
-            {days.map(day => {
-              const dateStr = formatDate(day);
-              const plannedOutfit = getOutfitForDate(dateStr);
-              const isToday = day === today.getDate() && currentMonth === today.getMonth();
-              const isPast = new Date(currentYear, currentMonth, day) < today;
-              
-              return (
-                <div
-                  key={day}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, dateStr)}
-                  className={`aspect-square border rounded-lg p-1 transition-all duration-200 ${
-                    isToday ? 'border-black bg-gray-50' : 'border-gray-200'
-                  } ${isPast ? 'opacity-50' : 'hover:bg-gray-50'} ${
-                    draggedOutfit && !isPast ? 'hover:border-blue-400 hover:bg-blue-50' : ''
-                  }`}
-                >
-                  <div className="text-xs font-medium mb-1">{day}</div>
-                  {plannedOutfit && (
-                    <div className="relative group">
-                      <div className="grid grid-cols-2 gap-0.5">
-                        {plannedOutfit.items.slice(0, 4).map((item, index) => (
-                          <img
-                            key={item.id}
-                            src={item.imageUrl || item.image}
-                            alt=""
-                            className="w-full h-3 rounded-sm object-cover"
-                          />
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => removeOutfitFromDate(dateStr)}
-                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-3 h-3 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                        style={{ fontSize: '8px' }}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-12">
+        <h1 className="text-4xl font-light text-gray-900 mb-2">Calendar</h1>
+        <p className="text-gray-600 font-light">Plan your outfits for the week</p>
       </div>
 
-      {/* Outfit Sidebar */}
-      <div className="w-80 bg-gray-50 p-6 border-l">
-        <h2 className="text-lg font-medium mb-4">Your Outfits</h2>
-        
-        <div className="space-y-3 overflow-y-auto h-full">
-          {user.outfits.map(outfit => (
-            <div
-              key={outfit.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, outfit)}
-              className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 cursor-move"
-            >
-              <h3 className="font-medium text-sm mb-2 truncate">{outfit.name}</h3>
-              <div className="grid grid-cols-4 gap-1">
-                {outfit.items.slice(0, 4).map(item => (
-                  <img
-                    key={item.id}
-                    src={item.imageUrl || item.image}
-                    alt={item.name}
-                    className="w-full aspect-square object-cover rounded"
-                  />
-                ))}
-                {outfit.items.length > 4 && (
-                  <div className="bg-gray-100 rounded aspect-square flex items-center justify-center text-xs text-gray-600">
-                    +{outfit.items.length - 4}
+      <div className="grid lg:grid-cols-4 gap-12">
+        {/* Calendar */}
+        <div className="lg:col-span-3">
+          <div className="bg-white rounded-3xl p-8 border border-gray-100">
+            <h2 className="text-2xl font-light mb-8 text-center text-gray-900">
+              {monthNames[currentMonth]} {currentYear}
+            </h2>
+            
+            <div className="grid grid-cols-7 gap-4 mb-6">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className="text-center font-medium text-gray-500 py-3">
+                  {day}
+                </div>
+              ))}
+            </div>
+            
+            <div className="grid grid-cols-7 gap-4">
+              {emptyDays.map((_, index) => (
+                <div key={`empty-${index}`} className="aspect-square"></div>
+              ))}
+              
+              {days.map(day => {
+                const dateStr = formatDate(day);
+                const plannedOutfit = getOutfitForDate(dateStr);
+                const isToday = day === today.getDate() && currentMonth === today.getMonth();
+                const isPast = new Date(currentYear, currentMonth, day) < today;
+                
+                return (
+                  <div
+                    key={day}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, dateStr)}
+                    className={`aspect-square border-2 border-dashed rounded-2xl p-3 transition-all duration-200 ${
+                      isToday ? 'border-gray-900 bg-gray-50' : 'border-gray-200'
+                    } ${isPast ? 'opacity-40' : 'hover:border-gray-400'} ${
+                      draggedOutfit && !isPast ? 'hover:border-gray-900 hover:bg-gray-50' : ''
+                    }`}
+                  >
+                    <div className="text-sm font-medium mb-2 text-gray-900">{day}</div>
+                    {plannedOutfit && (
+                      <div className="relative group">
+                        <div className="grid grid-cols-2 gap-1">
+                          {plannedOutfit.items.slice(0, 4).map((item, index) => (
+                            <img
+                              key={item.clothingItem.id}
+                              src={item.clothingItem.imageUrl}
+                              alt=""
+                              className="w-full h-6 rounded object-cover"
+                            />
+                          ))}
+                        </div>
+                        <button
+                          onClick={() => removeOutfitFromDate(dateStr)}
+                          className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })}
             </div>
-          ))}
-          
-          {user.outfits.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <p className="text-sm">Create some outfits first to start planning!</p>
+          </div>
+        </div>
+
+        {/* Outfit Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-3xl p-6 border border-gray-100">
+            <h3 className="text-lg font-medium mb-6 text-gray-900">Your Outfits</h3>
+            
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {user.outfits.map(outfit => (
+                <div
+                  key={outfit.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, outfit)}
+                  className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-all duration-200 cursor-move"
+                >
+                  <h4 className="font-medium text-sm mb-3 truncate text-gray-900">{outfit.name}</h4>
+                  <div className="grid grid-cols-3 gap-1">
+                    {outfit.items.slice(0, 3).map(item => (
+                      <img
+                        key={item.id}
+                        src={item.imageUrl || item.image}
+                        alt={item.name}
+                        className="w-full aspect-square object-cover rounded-lg"
+                      />
+                    ))}
+                    {outfit.items.length > 3 && (
+                      <div className="bg-gray-200 rounded-lg aspect-square flex items-center justify-center text-xs text-gray-600 font-medium">
+                        +{outfit.items.length - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {user.outfits.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm font-light">Create outfits to start planning</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

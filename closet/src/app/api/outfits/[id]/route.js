@@ -1,3 +1,4 @@
+// src/app/api/outfits/[id]/route.js
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
@@ -11,7 +12,8 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = params
+    // Await params before using
+    const { id } = await params
 
     // Verify the outfit belongs to the user
     const outfit = await db.outfit.findFirst({

@@ -53,32 +53,29 @@
 .animate-glow { animation: glow 2s ease-in-out infinite; }
 .animate-float-gentle { animation: float-gentle 3s ease-in-out infinite; }
 
-/* Flowing gradient text - left to right */
-.flowing-gradient-text {
+/* Dreamy gradient text for landing page */
+.dreamy-gradient-text {
   background: linear-gradient(
-    90deg,
-    #ff6b6b 0%,
-    #4ecdc4 14%,
-    #45b7d1 28%,
-    #96ceb4 42%,
-    #feca57 56%,
-    #ff9ff3 70%,
-    #54a0ff 84%,
-    #ff6b6b 100%
+    135deg,
+    #8b5cf6 0%,
+    #ec4899 25%,
+    #f59e0b 50%,
+    #3b82f6 75%,
+    #8b5cf6 100%
   );
-  background-size: 200% auto;
+  background-size: 300% auto;
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: flowing-gradient 4s linear infinite;
+  animation: dreamy-gradient 4s linear infinite;
 }
 
-@keyframes flowing-gradient {
+@keyframes dreamy-gradient {
   0% {
-    background-position: 0% 50%;
+    background-position: 300% 50%;
   }
   100% {
-    background-position: 200% 50%;
+    background-position: 0% 50%;
   }
 }
 

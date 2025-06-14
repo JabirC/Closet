@@ -12,13 +12,14 @@ model User {
   email     String   @unique
   name      String
   password  String
-  tier      String   @default("free") // free, premium
+  tier      String   @default("free")
   uploadCount Int    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   clothes   ClothingItem[]
   outfits   Outfit[]
+  calendar  CalendarEntry[]
 
   @@map("users")
 }
@@ -46,8 +47,9 @@ model Outfit {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  items     OutfitItem[]
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items        OutfitItem[]
+  calendarEntries CalendarEntry[]
 
   @@map("outfits")
 }
@@ -62,4 +64,19 @@ model OutfitItem {
 
   @@unique([outfitId, clothingItemId])
   @@map("outfit_items")
+}
+
+model CalendarEntry {
+  id        String   @id @default(cuid())
+  date      String   // Format: YYYY-MM-DD
+  outfitId  String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfit    Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@map("calendar_entries")
 }

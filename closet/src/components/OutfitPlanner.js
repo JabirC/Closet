@@ -1,16 +1,16 @@
-//src/components/OutfitPlanner.js
-
+// src/components/OutfitPlanner.js
 'use client';
 import { useState } from 'react';
-import { Plus, X, Sparkles } from 'lucide-react';
+import { Plus, X, Sparkles, Trash2 } from 'lucide-react';
 
 export default function OutfitPlanner({ user, updateUser }) {
   const [selectedItems, setSelectedItems] = useState([]);
   const [outfitName, setOutfitName] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  const categories = ['all', 'tops', 'bott', 'shoes', 'accessories', 'outerwear'];
+  const categories = ['all', 'tops', 'bottoms', 'shoes', 'accessories', 'outerwear'];
   
   const filteredClothes = selectedCategory === 'all' 
     ? user.clothes 
@@ -78,30 +78,32 @@ export default function OutfitPlanner({ user, updateUser }) {
         outfits: user.outfits.filter(outfit => outfit.id !== outfitId)
       };
       updateUser(updatedUser);
+      setShowDeleteConfirm(null);
     } catch (error) {
       console.error('Error deleting outfit:', error);
     }
   };
 
   return (
-    <div className="max-h-screen overflow-hidden">
+    <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-light text-gray-900">Outfit Planner</h1>
-          <p className="text-gray-600 mt-1">Create and manage your outfit combinations</p>
+          <p className="text-gray-600 mt-1 font-light">{user.outfits.length} outfit{user.outfits.length !== 1 ? 's' : ''} created</p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex items-center space-x-2 bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 hover:scale-105 cursor-pointer"
+          className="flex items-center space-x-2 bg-gray-900 text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-all duration-200 hover:scale-105"
         >
           <Plus className="w-5 h-5" />
           <span>Create Outfit</span>
         </button>
       </div>
 
+      {/* Create Form Modal */}
       {showCreateForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl p-8 max-w-5xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900 flex items-center">
                 <Sparkles className="w-6 h-6 mr-2 text-purple-500" />
@@ -113,7 +115,7 @@ export default function OutfitPlanner({ user, updateUser }) {
                   setSelectedItems([]);
                   setOutfitName('');
                 }}
-                className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -125,24 +127,24 @@ export default function OutfitPlanner({ user, updateUser }) {
                 placeholder="Enter outfit name..."
                 value={outfitName}
                 onChange={(e) => setOutfitName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent text-gray-900 placeholder-gray-500"
               />
             </div>
 
             {selectedItems.length > 0 && (
               <div className="mb-6 p-4 bg-gray-50 rounded-xl">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Selected Items ({selectedItems.length})</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2">
                   {selectedItems.map(item => (
                     <div key={item.id} className="relative group">
                       <img
                         src={item.imageUrl || item.image}
                         alt={item.name}
-                        className="w-16 h-16 object-cover rounded-lg border-2 border-black"
+                        className="w-full aspect-square object-cover rounded-lg border-2 border-gray-900"
                       />
                       <button
                         onClick={() => toggleItemSelection(item)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         ×
                       </button>
@@ -158,9 +160,9 @@ export default function OutfitPlanner({ user, updateUser }) {
                   <button
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-4 py-2 rounded-lg capitalize transition-colors cursor-pointer ${
+                    className={`px-4 py-2 rounded-lg capitalize transition-colors ${
                       selectedCategory === category
-                        ? 'bg-black text-white'
+                        ? 'bg-gray-900 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
@@ -170,7 +172,7 @@ export default function OutfitPlanner({ user, updateUser }) {
               </div>
             </div>
             
-            <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 mb-6 max-h-96 overflow-y-auto">
+            <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-3 mb-6 max-h-80 overflow-y-auto">
               {filteredClothes.map(item => {
                 const isSelected = selectedItems.find(i => i.id === item.id);
                 return (
@@ -179,7 +181,7 @@ export default function OutfitPlanner({ user, updateUser }) {
                     onClick={() => toggleItemSelection(item)}
                     className={`cursor-pointer rounded-lg overflow-hidden transition-all duration-200 hover:scale-105 ${
                       isSelected
-                        ? 'ring-3 ring-black shadow-lg scale-105'
+                        ? 'ring-3 ring-gray-900 shadow-lg scale-105'
                         : 'hover:shadow-md'
                     }`}
                   >
@@ -188,9 +190,6 @@ export default function OutfitPlanner({ user, updateUser }) {
                       alt={item.name}
                       className="w-full aspect-square object-cover"
                     />
-                    <div className="p-2 bg-white">
-                      <p className="text-xs text-gray-600 truncate">{item.name}</p>
-                    </div>
                   </div>
                 );
               })}
@@ -203,14 +202,14 @@ export default function OutfitPlanner({ user, updateUser }) {
                   setSelectedItems([]);
                   setOutfitName('');
                 }}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={createOutfit}
                 disabled={!outfitName || selectedItems.length === 0}
-                className="px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create Outfit
               </button>
@@ -219,36 +218,36 @@ export default function OutfitPlanner({ user, updateUser }) {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-y-auto max-h-[calc(100vh-200px)]">
+      {/* Outfits Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {user.outfits.map(outfit => (
-          <div key={outfit.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">{outfit.name}</h3>
-              <button
-                onClick={() => deleteOutfit(outfit.id)}
-                className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-2">
-              {outfit.items.slice(0, 6).map(item => (
-                <img
-                  key={item.id}
-                  src={item.imageUrl || item.image}
-                  alt={item.name}
-                  className="w-full aspect-square object-cover rounded-lg"
-                />
-              ))}
-              {outfit.items.length > 6 && (
-                <div className="bg-gray-100 rounded-lg aspect-square flex items-center justify-center text-gray-600 text-sm font-medium">
-                  +{outfit.items.length - 6}
-                </div>
-              )}
-            </div>
-            <div className="mt-3 text-sm text-gray-500">
-              {outfit.items.length} item{outfit.items.length !== 1 ? 's' : ''}
+          <div key={outfit.id} className="group relative">
+            <div className="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-3">
+                <h3 className="text-sm font-semibold text-gray-900 truncate">{outfit.name}</h3>
+                <button
+                  onClick={() => setShowDeleteConfirm(outfit.id)}
+                  className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                {outfit.items.slice(0, 6).map(item => (
+                  <img
+                    key={item.id}
+                    src={item.imageUrl || item.image}
+                    alt={item.name}
+                    className="w-full aspect-square object-cover rounded-lg"
+                  />
+                ))}
+                {outfit.items.length > 6 && (
+                  <div className="bg-gray-100 rounded-lg aspect-square flex items-center justify-center text-gray-600 text-xs font-medium">
+                    +{outfit.items.length - 6}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -258,13 +257,37 @@ export default function OutfitPlanner({ user, updateUser }) {
         <div className="text-center py-16">
           <Sparkles className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No outfits created yet</h3>
-          <p className="text-gray-600 mb-6">Start creating your perfect outfit combinations!</p>
+          <p className="text-gray-600 mb-6 font-light">Start creating your perfect outfit combinations!</p>
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors cursor-pointer"
+            className="bg-gray-900 text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition-colors"
           >
             Create Your First Outfit
           </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Outfit</h3>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this outfit? This action cannot be undone.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteOutfit(showDeleteConfirm)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
