@@ -1,33 +1,42 @@
 // src/components/Calendar.js
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 export default function Calendar({ user, updateUser }) {
   const [selectedDate, setSelectedDate] = useState(null);
   const [draggedOutfit, setDraggedOutfit] = useState(null);
   const [calendar, setCalendar] = useState({});
   const [loading, setLoading] = useState(true);
+  const [dragGhost, setDragGhost] = useState(null);
 
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
-  
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-  const emptyDays = Array.from({ length: firstDayOfMonth }, (_, i) => null);
-  
-  const monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+  // Memoize calendar calculations to prevent unnecessary re-renders
+  const calendarData = useMemo(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
+    
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const emptyDays = Array.from({ length: firstDayOfMonth }, (_, i) => null);
+    
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
 
-  useEffect(() => {
-    fetchCalendar();
+    return {
+      today,
+      currentMonth,
+      currentYear,
+      days,
+      emptyDays,
+      monthNames
+    };
   }, []);
 
-  const fetchCalendar = async () => {
+  const fetchCalendar = useCallback(async () => {
     try {
       const response = await fetch('/api/calendar');
       if (response.ok) {
@@ -39,29 +48,60 @@ export default function Calendar({ user, updateUser }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const formatDate = (day) => {
-    return `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  };
+  useEffect(() => {
+    fetchCalendar();
+  }, [fetchCalendar]);
 
-  const getOutfitForDate = (date) => {
+  const formatDate = useCallback((day) => {
+    return `${calendarData.currentYear}-${String(calendarData.currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }, [calendarData.currentYear, calendarData.currentMonth]);
+
+  const getOutfitForDate = useCallback((date) => {
     const entry = calendar[date];
     return entry?.outfit;
-  };
+  }, [calendar]);
 
-  const handleDragStart = (e, outfit) => {
+  const handleDragStart = useCallback((e, outfit) => {
     setDraggedOutfit(outfit);
+    setDragGhost(outfit.id);
     e.dataTransfer.effectAllowed = 'move';
-  };
+    e.dataTransfer.setData('text/plain', '');
+    
+    // Add smooth drag start animation
+    e.target.classList.add('animate-drag-start');
+  }, []);
 
-  const handleDragOver = (e) => {
+  const handleDragEnd = useCallback((e) => {
+    setDraggedOutfit(null);
+    setDragGhost(null);
+    e.target.classList.remove('animate-drag-start', 'dragging');
+    e.target.classList.add('animate-drag-drop');
+    
+    setTimeout(() => {
+      e.target.classList.remove('animate-drag-drop');
+    }, 300);
+  }, []);
+
+  const handleDragOver = useCallback((e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  };
+  }, []);
 
-  const handleDrop = async (e, date) => {
+  const handleDragEnter = useCallback((e) => {
     e.preventDefault();
+    e.target.classList.add('drag-over');
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.target.classList.remove('drag-over');
+  }, []);
+
+  const handleDrop = useCallback(async (e, date) => {
+    e.preventDefault();
+    e.target.classList.remove('drag-over');
+    
     if (!draggedOutfit) return;
     
     try {
@@ -89,9 +129,10 @@ export default function Calendar({ user, updateUser }) {
     }
     
     setDraggedOutfit(null);
-  };
+    setDragGhost(null);
+  }, [draggedOutfit]);
 
-  const removeOutfitFromDate = async (date) => {
+  const removeOutfitFromDate = useCallback(async (date) => {
     try {
       const response = await fetch(`/api/calendar?date=${date}`, {
         method: 'DELETE'
@@ -104,7 +145,7 @@ export default function Calendar({ user, updateUser }) {
     } catch (error) {
       console.error('Error removing outfit from calendar:', error);
     }
-  };
+  }, [calendar]);
 
   if (loading) {
     return (
@@ -116,17 +157,12 @@ export default function Calendar({ user, updateUser }) {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-12">
-        <h1 className="text-4xl font-light text-gray-900 mb-2">Calendar</h1>
-        <p className="text-gray-600 font-light">Plan your outfits for the week</p>
-      </div>
-
       <div className="grid lg:grid-cols-4 gap-12">
         {/* Calendar */}
         <div className="lg:col-span-3">
           <div className="bg-white rounded-3xl p-8 border border-gray-100">
             <h2 className="text-2xl font-light mb-8 text-center text-gray-900">
-              {monthNames[currentMonth]} {currentYear}
+              {calendarData.monthNames[calendarData.currentMonth]} {calendarData.currentYear}
             </h2>
             
             <div className="grid grid-cols-7 gap-4 mb-6">
@@ -138,25 +174,27 @@ export default function Calendar({ user, updateUser }) {
             </div>
             
             <div className="grid grid-cols-7 gap-4">
-              {emptyDays.map((_, index) => (
+              {calendarData.emptyDays.map((_, index) => (
                 <div key={`empty-${index}`} className="aspect-square"></div>
               ))}
               
-              {days.map(day => {
+              {calendarData.days.map(day => {
                 const dateStr = formatDate(day);
                 const plannedOutfit = getOutfitForDate(dateStr);
-                const isToday = day === today.getDate() && currentMonth === today.getMonth();
-                const isPast = new Date(currentYear, currentMonth, day) < today;
+                const isToday = day === calendarData.today.getDate() && calendarData.currentMonth === calendarData.today.getMonth();
+                const isPast = new Date(calendarData.currentYear, calendarData.currentMonth, day) < calendarData.today;
                 
                 return (
                   <div
                     key={day}
                     onDragOver={handleDragOver}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, dateStr)}
-                    className={`aspect-square border-2 border-dashed rounded-2xl p-3 transition-all duration-200 ${
+                    className={`aspect-square border-2 border-dashed rounded-2xl p-3 transition-all duration-300 ${
                       isToday ? 'border-gray-900 bg-gray-50' : 'border-gray-200'
                     } ${isPast ? 'opacity-40' : 'hover:border-gray-400'} ${
-                      draggedOutfit && !isPast ? 'hover:border-gray-900 hover:bg-gray-50' : ''
+                      draggedOutfit && !isPast ? 'hover:border-gray-900 hover:bg-gray-50 hover:scale-105' : ''
                     }`}
                   >
                     <div className="text-sm font-medium mb-2 text-gray-900">{day}</div>
@@ -168,13 +206,13 @@ export default function Calendar({ user, updateUser }) {
                               key={item.clothingItem.id}
                               src={item.clothingItem.imageUrl}
                               alt=""
-                              className="w-full h-6 rounded object-cover"
+                              className="w-full h-6 rounded object-cover transition-transform duration-300 group-hover:scale-105"
                             />
                           ))}
                         </div>
                         <button
                           onClick={() => removeOutfitFromDate(dateStr)}
-                          className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                          className="absolute -top-2 -right-2 bg-gray-900 text-white rounded-full w-5 h-5 text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center hover:bg-red-500"
                         >
                           ×
                         </button>
@@ -198,7 +236,10 @@ export default function Calendar({ user, updateUser }) {
                   key={outfit.id}
                   draggable
                   onDragStart={(e) => handleDragStart(e, outfit)}
-                  className="bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-all duration-200 cursor-move"
+                  onDragEnd={handleDragEnd}
+                  className={`bg-gray-50 rounded-2xl p-4 hover:bg-gray-100 transition-all duration-300 cursor-move hover:scale-105 ${
+                    dragGhost === outfit.id ? 'drag-ghost' : ''
+                  }`}
                 >
                   <h4 className="font-medium text-sm mb-3 truncate text-gray-900">{outfit.name}</h4>
                   <div className="grid grid-cols-3 gap-1">
@@ -207,7 +248,7 @@ export default function Calendar({ user, updateUser }) {
                         key={item.id}
                         src={item.imageUrl || item.image}
                         alt={item.name}
-                        className="w-full aspect-square object-cover rounded-lg"
+                        className="w-full aspect-square object-cover rounded-lg transition-transform duration-300"
                       />
                     ))}
                     {outfit.items.length > 3 && (

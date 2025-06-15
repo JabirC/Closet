@@ -114,12 +114,6 @@ export default function ClothingDrawer({ user, updateUser }) {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-light text-gray-900">Your Closet</h1>
-          <p className="text-gray-600 mt-2 font-light">
-            {user.uploadCount || 0} of {uploadLimit} items uploaded
-          </p>
-        </div>
         <button
           onClick={() => setShowUpload(true)}
           disabled={!canUpload}
@@ -135,7 +129,7 @@ export default function ClothingDrawer({ user, updateUser }) {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-2">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-2 animate-slide-up">
           <AlertCircle className="w-5 h-5 text-red-600" />
           <p className="text-red-600 text-sm">{error}</p>
         </div>
@@ -162,7 +156,7 @@ export default function ClothingDrawer({ user, updateUser }) {
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {filteredClothes.map(item => (
           <div key={item.id} className="group relative">
-            <div className="aspect-square relative bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="aspect-square relative bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-md transition-all duration-300">
               <img
                 src={item.imageUrl || item.image}
                 alt={item.name}
@@ -170,7 +164,7 @@ export default function ClothingDrawer({ user, updateUser }) {
               />
               <button
                 onClick={() => setShowDeleteConfirm(item.id)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600"
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center hover:bg-red-600"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -189,8 +183,8 @@ export default function ClothingDrawer({ user, updateUser }) {
 
       {/* Upload Modal */}
       {showUpload && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slide-up">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Upload Photos</h2>
               <button 
@@ -198,7 +192,7 @@ export default function ClothingDrawer({ user, updateUser }) {
                   setShowUpload(false);
                   setPendingUploads([]);
                 }} 
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -256,12 +250,12 @@ export default function ClothingDrawer({ user, updateUser }) {
                           value={upload.name}
                           onChange={(e) => updatePendingUpload(upload.id, 'name', e.target.value)}
                           placeholder="Item name"
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all"
                         />
                         <select
                           value={upload.category}
                           onChange={(e) => updatePendingUpload(upload.id, 'category', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 transition-all"
                         >
                           {categories.slice(1).map(cat => (
                             <option key={cat} value={cat} className="capitalize">{cat}</option>
@@ -295,8 +289,8 @@ export default function ClothingDrawer({ user, updateUser }) {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 animate-slide-up">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Item</h3>
             <p className="text-gray-600 mb-6">Are you sure you want to delete this item? This action cannot be undone.</p>
             <div className="flex justify-end space-x-3">

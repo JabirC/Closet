@@ -9,16 +9,31 @@ export default function LandingPage() {
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [authError, setAuthError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [animatedLetters, setAnimatedLetters] = useState([]);
 
   const words = ['Reimagined', 'Organized', 'Simplified', 'Digitized', 'Personalized'];
 
-  // Flowing word transition effect
+  // Letter-by-letter animation effect
   useEffect(() => {
+    const animateWord = () => {
+      const currentWord = words[currentWordIndex];
+      setAnimatedLetters([]);
+      
+      currentWord.split('').forEach((letter, index) => {
+        setTimeout(() => {
+          setAnimatedLetters(prev => [...prev, { letter, index }]);
+        }, index * 100);
+      });
+    };
+
+    animateWord();
+    
     const interval = setInterval(() => {
       setCurrentWordIndex((prev) => (prev + 1) % words.length);
-    }, 3000);
+    }, 6000);
+    
     return () => clearInterval(interval);
-  }, [words.length]);
+  }, [currentWordIndex, words.length]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,13 +88,13 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Dreamy Gradient Background */}
-      <div className="absolute inset-0 bg-white">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-200/40 via-pink-200/30 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-200/40 via-purple-200/30 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-orange-200/40 via-pink-200/30 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-200/40 via-violet-200/30 to-transparent rounded-full blur-3xl"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/20 via-transparent to-blue-50/20"></div>
+      {/* Stronger Gradient Background */}
+      <div className="absolute inset-0 bg-white stronger-gradient-bg">
+        <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-300/60 via-pink-300/50 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-violet-300/60 via-purple-300/50 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-orange-300/60 via-pink-300/50 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-blue-300/60 via-violet-300/50 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-100/40 via-transparent to-blue-100/40"></div>
       </div>
 
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
@@ -91,16 +106,17 @@ export default function LandingPage() {
               <h1 className="text-5xl lg:text-7xl font-bold text-gray-900 mb-8 leading-tight">
                 Your Closet,
                 <br />
-                <span className="relative inline-block overflow-hidden">
-                  <span 
-                    key={currentWordIndex}
-                    className="inline-block animate-slide-up dreamy-gradient-text"
-                    style={{
-                      animationDelay: '0s',
-                      animationDuration: '0.8s'
-                    }}
-                  >
-                    {words[currentWordIndex]}
+                <span className="relative inline-block overflow-hidden min-h-[1.2em]">
+                  <span className="dreamy-gradient-text">
+                    {animatedLetters.map((item, index) => (
+                      <span
+                        key={`${currentWordIndex}-${index}`}
+                        className="letter-animate"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                      >
+                        {item.letter}
+                      </span>
+                    ))}
                   </span>
                 </span>
               </h1>
@@ -151,7 +167,7 @@ export default function LandingPage() {
 
           {/* Right Side - Auth Form */}
           <div className="animate-slide-up-delay">
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-10 border border-gray-200/50 shadow-2xl">
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-10 border border-gray-200/50 shadow-2xl">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-3">
                   {isLogin ? 'Welcome Back' : 'Create Account'}
@@ -162,7 +178,7 @@ export default function LandingPage() {
               </div>
 
               {authError && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl animate-slide-up">
                   <p className="text-red-600 text-sm flex items-center">
                     <Shield className="w-4 h-4 mr-2" />
                     {authError}

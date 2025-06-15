@@ -1,6 +1,6 @@
 // src/components/Dashboard.js
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { signOut } from 'next-auth/react';
 import { User, Crown, LogOut, ChevronDown } from 'lucide-react';
 import TopNavigation from './TopNavigation';
@@ -61,6 +61,20 @@ export default function Dashboard({ user }) {
     signOut({ callbackUrl: '/' });
   };
 
+  // Memoize tab content to prevent unnecessary re-renders
+  const tabContent = useMemo(() => {
+    switch (activeTab) {
+      case 'closet':
+        return <ClothingDrawer user={userData} updateUser={updateUserData} />;
+      case 'outfits':
+        return <OutfitPlanner user={userData} updateUser={updateUserData} />;
+      case 'calendar':
+        return <Calendar user={userData} updateUser={updateUserData} />;
+      default:
+        return null;
+    }
+  }, [activeTab, userData]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -74,46 +88,39 @@ export default function Dashboard({ user }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-light text-gray-900">closet</h1>
-          
-          {/* Profile Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center space-x-3 p-2 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm font-medium text-gray-700">{userData.name}</span>
-              <ChevronDown className="w-4 h-4 text-gray-500" />
-            </button>
+      {/* Floating Profile Menu */}
+      <div className="fixed top-6 right-6 z-50">
+        <div className="relative">
+          <button
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className="flex items-center space-x-3 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+          >
+            <div className="w-8 h-8 bg-gray-900 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-medium text-gray-700 hidden sm:block">{userData.name}</span>
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          </button>
 
-            {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-900">{userData.name}</p>
-                  <p className="text-xs text-gray-500">{userData.email}</p>
-                </div>
-                <button
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2"
-                >
-                  <Crown className="w-4 h-4" />
-                  <span>Plan Information ({userData.tier})</span>
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
+          {showProfileMenu && (
+            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 animate-slide-up">
+              <div className="px-4 py-2 border-b border-gray-100">
+                <p className="text-sm font-medium text-gray-900">{userData.name}</p>
+                <p className="text-xs text-gray-500">{userData.email}</p>
               </div>
-            )}
-          </div>
+              <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 transition-colors">
+                <Crown className="w-4 h-4" />
+                <span>Plan Information ({userData.tier})</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -121,16 +128,8 @@ export default function Dashboard({ user }) {
       <TopNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
       
       {/* Main Content */}
-      <div className="px-6 py-8">
-        {activeTab === 'closet' && (
-          <ClothingDrawer user={userData} updateUser={updateUserData} />
-        )}
-        {activeTab === 'outfits' && (
-          <OutfitPlanner user={userData} updateUser={updateUserData} />
-        )}
-        {activeTab === 'calendar' && (
-          <Calendar user={userData} updateUser={updateUserData} />
-        )}
+      <div className="px-6 pb-8 tab-content">
+        {tabContent}
       </div>
     </div>
   );

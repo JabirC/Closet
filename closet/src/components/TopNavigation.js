@@ -9,20 +9,20 @@ export default function TopNavigation({ activeTab, setActiveTab }) {
   ];
 
   return (
-    <div className="flex justify-center py-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2 flex space-x-2">
+    <div className="flex justify-center py-8">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-2 flex space-x-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-6 py-3 rounded-xl transition-all duration-200 ${
+            className={`tab-button flex items-center space-x-2 px-6 py-3 rounded-xl font-medium ${
               activeTab === tab.id 
-                ? 'bg-gray-900 text-white shadow-sm' 
+                ? 'bg-gray-900 text-white shadow-md transform scale-105' 
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
             }`}
           >
             {tab.icon}
-            <span className="font-medium">{tab.name}</span>
+            <span>{tab.name}</span>
           </button>
         ))}
       </div>
